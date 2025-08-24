@@ -56,7 +56,7 @@ function initializeGame() {
 function setupEvents() {
   document.getElementById('mode-selector').addEventListener('change', function() {
     const categorySelector = document.getElementById('category-selector');
-    if (this.value === 'category' || this.value === 'dictation' || this.value === 'review' || this.value === 'listening' || this.value === 'wordlist') {
+    if (this.value === 'category' || this.value === 'dictation' || this.value === 'review' || this.value === 'listening' || this.value === 'wordlist' || this.value === 'word-to-chinese') {
       categorySelector.disabled = false;
     } else {
       categorySelector.disabled = true;
@@ -124,6 +124,12 @@ function getRandomWords(count) {
     // 按字母顺序排序
     filteredWords = filteredWords.sort((a, b) => a.english.localeCompare(b.english));
     return filteredWords;
+  } else if (mode === 'word-to-chinese') {
+    // 看单词选中文模式下，我们根据类别筛选单词
+    const category = document.getElementById('category-selector').value;
+    if (category !== 'all') {
+      filteredWords = window.vocabularyList.filter(word => word.category === category);
+    }
   }
 
   // 如果筛选后的单词数量不足，使用所有单词（复习模式和单词表模式除外）
@@ -150,7 +156,7 @@ function renderCards(words) {
   const mode = document.getElementById('mode-selector').value;
 
   // 初始化答题状态跟踪
-  if (mode === 'listening') {
+  if (mode === 'listening' || mode === 'word-to-chinese') {
     window.listeningAnswers = { total: words.length, correct: 0, completed: 0 };
   }
 
@@ -234,6 +240,19 @@ function renderCards(words) {
           <div class="input-container"><input type="text" class="answer-input" data-index="${i}" placeholder="输入英文单词">
           <button class="show-answer-btn">显示答案</button></div>
           <div class="correct-answer">正确答案: <strong>${w.english}</strong></div>`;
+      } else if (mode === 'word-to-chinese') {
+        // 看单词选中文模式
+        const options = getRandomChineseOptions(w.chinese, 3);
+        card.innerHTML = `
+          <div class="card-header"><div class="word-index">${i+1}</div><button class="speaker-btn dictation-btn">🔈</button></div>
+          <div class="english-word">${w.english}</div><div class="phonetic">${w.phonetic}</div>
+          <div class="listening-options">
+            ${options.map(option => `
+              <button class="option-btn" data-answer="${option}" data-index="${i}">${option}</button>
+            `).join('')}
+          </div>
+          <div class="correct-answer">正确答案: <strong>${w.chinese}</strong></div>
+          <div class="answer-status"></div>`;
       } else {
         // 普通模式和分类学习模式
         card.innerHTML = `
@@ -248,60 +267,53 @@ function renderCards(words) {
       container.appendChild(card);
       card.querySelector('.speaker-btn').addEventListener('click', () => speakWord(w.english));
 
-      if (mode === 'listening') {
+      if (mode === 'listening' || mode === 'word-to-chinese') {
         card.querySelectorAll('.option-btn').forEach(btn => {
           btn.addEventListener('click', function() {
             // 防止重复选择
             const options = card.querySelectorAll('.option-btn');
             options.forEach(opt => opt.disabled = true);
             
-
-
-            const isCorrect = this.dataset.answer === w.english;
+            // 确定正确答案和用户选择的答案
+            const userAnswer = this.dataset.answer;
+            const correctAnswer = mode === 'listening' ? w.english : w.chinese;
+            const isCorrect = userAnswer === correctAnswer;
             const answerStatus = card.querySelector('.answer-status');
             
-
-
-            if (isCorrect) {
-              this.classList.add('correct-option');
-              answerStatus.textContent = '回答正确！';
-              answerStatus.classList.add('correct-status');
-              
-
-
-              // 更新答题状态
-              window.listeningAnswers.correct++;
-              // 如果单词在错误列表中，移除它
-              if (errorWords[wordId]) {
-                delete errorWords[wordId];
+            // 更新按钮样式
+            this.classList.add(isCorrect ? 'correct-option' : 'wrong-option');
+            
+            // 显示正确答案
+            if (!isCorrect) {
+              // 使用更简单的方式查找正确选项
+              const correctBtn = Array.from(options).find(btn => btn.dataset.answer === correctAnswer);
+              if (correctBtn) {
+                correctBtn.classList.add('correct-option');
               }
-              saveErrorWords();
-            } else {
-              this.classList.add('wrong-option');
-              // 找出正确选项并高亮
-              const correctBtn = card.querySelector(`.option-btn[data-answer="${w.english}"]`);
-              correctBtn.classList.add('correct-option');
-              answerStatus.textContent = '回答错误！';
-              answerStatus.classList.add('wrong-status');
-              
-
-
-              // 更新错误次数
-              if (errorWords[wordId]) {
-                errorWords[wordId].errorCount++;
-              } else {
-                errorWords[wordId] = { word: { ...w }, errorCount: 1 };
-              }
-              saveErrorWords();
             }
             
-
-
-            // 更新完成数量
+            // 更新状态信息
+            answerStatus.textContent = isCorrect ? '回答正确！' : '回答错误！';
+            answerStatus.classList.add(isCorrect ? 'correct-status' : 'wrong-status');
+            
+            // 提供即时反馈动画
+            answerStatus.classList.add('feedback-animation');
+            setTimeout(() => {
+              answerStatus.classList.remove('feedback-animation');
+            }, 1000);
+            
+            // 更新错误单词记录和答题状态
+            if (isCorrect) {
+              if (errorWords[wordId]) delete errorWords[wordId];
+              window.listeningAnswers.correct++;
+            } else {
+              errorWords[wordId] = errorWords[wordId] || { word: { ...w }, errorCount: 0 };
+              errorWords[wordId].errorCount++;
+            }
+            saveErrorWords();
+            
             window.listeningAnswers.completed++;
             
-
-
             // 检查是否所有题目都已完成
             if (window.listeningAnswers.completed === window.listeningAnswers.total) {
               showListeningResults();
@@ -351,6 +363,32 @@ function getRandomOptions(correctAnswer, count) {
   return allOptions;
 }
 
+function getRandomChineseOptions(correctAnswer, count) {
+  // 获取不包含正确答案的随机中文
+  const mode = document.getElementById('mode-selector').value;
+  let filteredWords = window.vocabularyList;
+
+  // 如果是看单词选中文模式且选择了类别，只从该类别中获取干扰选项
+  if (mode === 'word-to-chinese') {
+    const category = document.getElementById('category-selector').value;
+    if (category !== 'all') {
+      filteredWords = window.vocabularyList.filter(word => word.category === category);
+    }
+  }
+
+  const otherWords = filteredWords
+    .filter(word => word.chinese !== correctAnswer)
+    .map(word => word.chinese);
+
+  // 随机选择指定数量的中文
+  const randomWords = [...otherWords].sort(() => 0.5 - Math.random()).slice(0, count);
+
+  // 将正确答案添加到选项中并打乱顺序
+  const allOptions = [correctAnswer, ...randomWords].sort(() => 0.5 - Math.random());
+
+  return allOptions;
+}
+
 function getCategoryName(categoryCode) {
   const categories = {
     'animal': '动物',
@@ -371,9 +409,11 @@ function showListeningResults() {
   const resultContainer = document.getElementById('result-container');
   const { total, correct } = window.listeningAnswers;
   const percent = Math.round(correct / total * 100);
+  const mode = document.getElementById('mode-selector').value;
+  const title = mode === 'listening' ? '听音选单词结果' : '看单词选中文结果';
 
   resultContainer.innerHTML = `
-    <h2>听音选单词结果</h2>
+    <h2>${title}</h2>
     <p>答对: ${correct} / ${total}</p>
     <p>正确率: ${percent}%</p>
   `;

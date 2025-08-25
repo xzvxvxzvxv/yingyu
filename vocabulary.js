@@ -20,7 +20,6 @@ const vocabularyList = [
   { chinese:"橘子", english:"Orange", phonetic:"/ˈɒr.ɪndʒ/", category:"fruit" },
   { chinese:"礼物", english:"Gift", phonetic:"/ɡɪft/", category:"daily" },
   { chinese:"香蕉", english:"Banana", phonetic:"/bəˈnɑː.nə/", category:"fruit" },
-  { chinese:"太阳", english:"Sun", phonetic:"/sʌn/", category:"daily" },
   
   // 新增适合幼儿的单词
   // 动物类
@@ -162,7 +161,39 @@ const vocabularyList = [
   { chinese:"阿姨", english:"Aunt", phonetic:"/ænt/", category:"family" },
   { chinese:"堂兄弟", english:"Cousin", phonetic:"/ˈkʌzn/", category:"family" },
   { chinese:"丈夫", english:"Husband", phonetic:"/ˈhʌzbənd/", category:"family" },
-  { chinese:"妻子", english:"Wife", phonetic:"/waɪf/", category:"family" }
+  { chinese:"妻子", english:"Wife", phonetic:"/waɪf/", category:"family" },
+  
+  // 天气类
+  { chinese:"太阳", english:"Sun", phonetic:"/sʌn/", category:"weather" },
+  { chinese:"月亮", english:"Moon", phonetic:"/muːn/", category:"weather" },
+  { chinese:"星星", english:"Star", phonetic:"/stɑː/", category:"weather" },
+  { chinese:"云", english:"Cloud", phonetic:"/klaʊd/", category:"weather" },
+  { chinese:"雨", english:"Rain", phonetic:"/reɪn/", category:"weather" },
+  { chinese:"雪", english:"Snow", phonetic:"/snəʊ/", category:"weather" },
+  { chinese:"风", english:"Wind", phonetic:"/wɪnd/", category:"weather" },
+  { chinese:"晴天", english:"Sunny", phonetic:"/ˈsʌni/", category:"weather" },
+  { chinese:"多云", english:"Cloudy", phonetic:"/ˈklaʊdi/", category:"weather" },
+  { chinese:"下雨", english:"Rainy", phonetic:"/ˈreɪni/", category:"weather" },
+  
+  // 动作类
+  { chinese:"跑", english:"Run", phonetic:"/rʌn/", category:"action" },
+  { chinese:"走", english:"Walk", phonetic:"/wɔːk/", category:"action" },
+  { chinese:"跳", english:"Jump", phonetic:"/dʒʌmp/", category:"action" },
+  { chinese:"爬", english:"Climb", phonetic:"/klaɪm/", category:"action" },
+  { chinese:"吃", english:"Eat", phonetic:"/iːt/", category:"action" },
+  { chinese:"喝", english:"Drink", phonetic:"/drɪŋk/", category:"action" },
+  { chinese:"睡", english:"Sleep", phonetic:"/sliːp/", category:"action" },
+  { chinese:"玩", english:"Play", phonetic:"/pleɪ/", category:"action" },
+  { chinese:"笑", english:"Smile", phonetic:"/smaɪl/", category:"action" },
+  { chinese:"哭", english:"Cry", phonetic:"/kraɪ/", category:"action" },
+  
+  // 情感类
+  { chinese:"开心", english:"Happy", phonetic:"/ˈhæpi/", category:"emotion" },
+  { chinese:"伤心", english:"Sad", phonetic:"/sæd/", category:"emotion" },
+  { chinese:"生气", english:"Angry", phonetic:"/ˈæŋɡri/", category:"emotion" },
+  { chinese:"害怕", english:"Afraid", phonetic:"/əˈfreɪd/", category:"emotion" },
+  { chinese:"惊讶", english:"Surprised", phonetic:"/səˈpraɪzd/", category:"emotion" },
+  { chinese:"爱", english:"Love", phonetic:"/lʌv/", category:"emotion" }
 ];
 
 window.vocabularyList = vocabularyList;

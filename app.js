@@ -132,8 +132,9 @@ function getRandomWords(count) {
     }
   }
 
-  // 如果筛选后的单词数量不足，使用所有单词（复习模式和单词表模式除外）
-  if (filteredWords.length < count && mode !== 'review' && mode !== 'wordlist') {
+  // 如果筛选后的单词数量不足，并且用户没有明确选择类别，才使用所有单词（复习模式和单词表模式除外）
+  const category = document.getElementById('category-selector').value;
+  if (filteredWords.length < count && mode !== 'review' && mode !== 'wordlist' && category === 'all') {
     filteredWords = window.vocabularyList;
   }
 
@@ -399,7 +400,10 @@ function getCategoryName(categoryCode) {
     'fruit': '水果',
     'transport': '交通工具',
     'body': '身体部位',
-    'family': '亲属'
+    'family': '亲属',
+    'weather': '天气',
+    'action': '动作',
+    'emotion': '情感'
   };
 
   return categories[categoryCode] || '';

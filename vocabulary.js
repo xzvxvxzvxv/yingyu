@@ -497,7 +497,16 @@ const vocabularyList = [
   { chinese:"丑陋", english:"Ugly", phonetic:"/ˈʌɡli/", category:"emotion" },
   { chinese:"善良", english:"Kind", phonetic:"/kaɪnd/", category:"emotion" },
   { chinese:"友好", english:"Friendly", phonetic:"/ˈfrendli/", category:"emotion" },
-  { chinese:"可爱", english:"Cute", phonetic:"/kjuːt/", category:"emotion" }
+  { chinese:"可爱", english:"Cute", phonetic:"/kjuːt/", category:"emotion" },
+  
+  // 新增日常物品类单词
+  { chinese:"书包", english:"Schoolbag", phonetic:"/ˈskuːlbæɡ/", category:"daily" },
+  { chinese:"铅笔盒", english:"Pencil Case", phonetic:"/ˈpensl keɪs/", category:"daily" },
+  { chinese:"橡皮擦", english:"Eraser", phonetic:"/ɪˈreɪzə/", category:"daily" },
+  { chinese:"尺子", english:"Ruler", phonetic:"/ˈruːlə/", category:"daily" },
+  { chinese:"笔记本", english:"Notebook", phonetic:"/ˈnəʊtbʊk/", category:"daily" },
+  { chinese:"蜡笔", english:"Crayon", phonetic:"/ˈkreɪən/", category:"daily" },
+  { chinese:"水彩笔", english:"Marker", phonetic:"/ˈmɑːkə/", category:"daily" }
 ];
 
 window.vocabularyList = vocabularyList;

@@ -11,6 +11,21 @@
   <header>
     <h1>英语单词抄写练习系统</h1>
     <p class="description">看图记忆，听音辨识，抄写练习 - 专为二年级设计</p>
+    <div class="word-search">
+      <input type="text" id="word-search-input" placeholder="搜索单词...">
+      <select id="word-level-selector">
+        <option value="all">全部级别</option>
+        <option value="1-初中-顺序.json">初中</option>
+        <option value="2-高中-顺序.json">高中</option>
+        <option value="3-CET4-顺序.json">CET4</option>
+        <option value="4-CET6-顺序.json">CET6</option>
+        <option value="5-考研-顺序.json">考研</option>
+        <option value="6-托福-顺序.json">托福</option>
+        <option value="7-SAT-顺序.json">SAT</option>
+      </select>
+      <button id="search-btn">搜索</button>
+      <div id="search-results" class="search-results"></div>
+    </div>
   </header>
 
   <div class="controls">

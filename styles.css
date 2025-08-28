@@ -19,7 +19,7 @@ button {
 }
 button:hover { background:#2c65b8; transform: translateY(-2px); }
 #show-all-btn{background:#00d2ff;} #submit-btn{background:#00b09b;} #reset-btn{background:#ff416c;}
-.cards-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:25px;}
+.cards-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:25px;width:100%;max-width:100%;}
 .word-card{background:white;border-radius:16px;padding:20px;box-shadow:0 8px 20px rgba(0,0,0,.1);}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
 .word-index{background:#3a7bd5;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;}
@@ -72,6 +72,211 @@ button:hover { background:#2c65b8; transform: translateY(-2px); }
   border-radius: 4px;
   font-size: 0.9rem;
   margin-top: 5px;
+}
+
+/* 阅读模式样式 */
+.reading-card {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.1);
+  margin: 20px auto;
+  width: 100%;
+  max-width: 1200px;
+  height: auto;
+  min-height: 500px;
+  box-sizing: border-box;
+}
+
+/* 媒体查询 - 小屏幕设备优化 */
+@media (max-width: 768px) {
+  .reading-card {
+    width: 95%;
+    height: auto;
+    min-height: 400px;
+    padding: 20px 15px;
+    border-radius: 12px;
+    margin: 10px auto;
+  }
+  
+  .reading-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .reading-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .reading-content {
+    font-size: 1.1rem;
+    line-height: 1.7;
+  }
+  
+  .reading-content p {
+    text-indent: 20px;
+  }
+}
+
+.reading-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e4edf5;
+}
+
+.reading-header h2 {
+  color: #3a7bd5;
+  font-size: 2.4rem;
+  margin-bottom: 12px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.reading-header h3 {
+  color: #6c757d;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.reading-category {
+  display: inline-block;
+  background-color: #e4edf5;
+  color: #3a7bd5;
+  padding: 6px 20px;
+  border-radius: 20px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.reading-content {
+  font-size: 1.25rem;
+  line-height: 1.85;
+  color: #333;
+  margin-bottom: 30px;
+  letter-spacing: 0.2px;
+  word-spacing: 0.5px;
+}
+
+.reading-content p {
+  margin-bottom: 20px;
+  text-align: justify;
+  text-indent: 2em;
+}
+
+.reading-content .keyword {
+  background-color: #fff9c4;
+  color: #e65100;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.reading-content .keyword:hover {
+  background-color: #ffeb3b;
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.keyword {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.keyword:hover {
+  background-color: #ffeaa7;
+  transform: scale(1.05);
+}
+
+.reading-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.read-aloud-btn,
+.show-vocab-btn {
+  background: #3a7bd5;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all .3s ease;
+  box-shadow: 0 4px 8px rgba(58,123,213,0.3);
+}
+
+.read-aloud-btn:hover,
+.show-vocab-btn:hover {
+  background: #2c65b8;
+  transform: translateY(-2px);
+}
+
+.vocab-list {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.vocab-list h4 {
+  color: #3a7bd5;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.vocab-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.vocab-item {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.vocab-keyword {
+  font-weight: bold;
+  color: #3a7bd5;
+  flex: 1;
+}
+
+.vocab-chinese {
+  color: #6c757d;
+  flex: 1;
+}
+
+.vocab-speaker {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #3a7bd5;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.vocab-speaker:hover {
+  background-color: #e4edf5;
 }
 
 /* 原有单词表样式 */

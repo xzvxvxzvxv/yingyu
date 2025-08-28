@@ -56,7 +56,7 @@ function initializeGame() {
 function setupEvents() {
   document.getElementById('mode-selector').addEventListener('change', function() {
     const categorySelector = document.getElementById('category-selector');
-    if (this.value === 'category' || this.value === 'dictation' || this.value === 'review' || this.value === 'listening' || this.value === 'wordlist' || this.value === 'word-to-chinese') {
+    if (this.value === 'category' || this.value === 'dictation' || this.value === 'review' || this.value === 'listening' || this.value === 'wordlist' || this.value === 'word-to-chinese' || this.value === 'reading') {
       categorySelector.disabled = false;
     } else {
       categorySelector.disabled = true;
@@ -130,6 +130,9 @@ function getRandomWords(count) {
     if (category !== 'all') {
       filteredWords = window.vocabularyList.filter(word => word.category === category);
     }
+  } else if (mode === 'reading') {
+    // 阅读模式下，我们返回文章数据
+    return getReadingArticles(document.getElementById('category-selector').value);
   }
 
   // 如果筛选后的单词数量不足，并且用户没有明确选择类别，才使用所有单词（复习模式和单词表模式除外）
@@ -156,12 +159,118 @@ function renderCards(words) {
   container.innerHTML = '';
   const mode = document.getElementById('mode-selector').value;
 
+  // 非阅读模式 - 恢复卡片容器的原始网格布局样式
+  if (mode !== 'reading') {
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(280px, 1fr))';
+    container.style.gap = '25px';
+  }
+
   // 初始化答题状态跟踪
   if (mode === 'listening' || mode === 'word-to-chinese') {
     window.listeningAnswers = { total: words.length, correct: 0, completed: 0 };
   }
 
-  if (mode === 'wordlist') {
+  if (mode === 'reading') {
+    // 阅读模式 - 调整容器样式以避免卡片重叠
+    container.style.display = 'block';
+    container.style.gridTemplateColumns = 'none';
+    container.style.gap = '0';
+    
+    if (words.length === 0) {
+      container.innerHTML = `
+        <div class="no-words-message">
+          <h3>请自选阅读类别</h3>
+          <p>请从上方选择您想阅读的类别。</p>
+        </div>
+      `;
+      return;
+    }
+
+    // 渲染阅读文章
+    words.forEach(article => {
+      const card = document.createElement('div');
+      card.className = 'reading-card';
+      
+      // 将文章内容按换行符分割并处理关键词
+      const paragraphs = article.content.split('\n').map(paragraph => {
+        if (!paragraph.trim()) return '';
+        
+        // 处理关键词高亮
+        let processedParagraph = paragraph;
+        article.keyWords.forEach(keyword => {
+          const regex = new RegExp(`\\s(${keyword})\\s`, 'g');
+          processedParagraph = processedParagraph.replace(regex, ' <span class="keyword" data-keyword="$1">$1</span> ');
+        });
+        
+        return `<p>${processedParagraph}</p>`;
+      }).join('');
+      
+      card.innerHTML = `
+        <div class="reading-header">
+          <h2>${article.title}</h2>
+          <h3>${article.titleChinese}</h3>
+          <div class="reading-category">${getCategoryName(article.category)}</div>
+        </div>
+        <div class="reading-content">
+          ${paragraphs}
+        </div>
+        <div class="reading-actions">
+          <button class="read-aloud-btn">🔊 朗读全文</button>
+          <button class="show-vocab-btn">📚 查看词汇</button>
+        </div>
+        <div class="vocab-list" style="display: none;">
+          <h4>重点词汇</h4>
+          <div class="vocab-items">
+            ${article.keyWords.map(keyword => {
+              // 查找对应的中文翻译
+              const wordEntry = window.vocabularyList.find(word => 
+                word.english.toLowerCase() === keyword.toLowerCase() || 
+                word.english.toLowerCase() === keyword.toLowerCase().replace(/\s/g, '')
+              );
+              return `
+                <div class="vocab-item">
+                  <span class="vocab-keyword">${keyword}</span>
+                  <span class="vocab-chinese">${wordEntry ? wordEntry.chinese : ''}</span>
+                  <button class="vocab-speaker" data-word="${keyword}">🔈</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(card);
+      
+      // 添加朗读全文按钮事件
+      card.querySelector('.read-aloud-btn').addEventListener('click', function() {
+        readAloudArticle(article.content);
+      });
+      
+      // 添加查看词汇按钮事件
+      card.querySelector('.show-vocab-btn').addEventListener('click', function() {
+        const vocabList = card.querySelector('.vocab-list');
+        vocabList.style.display = vocabList.style.display === 'none' ? 'block' : 'none';
+        this.textContent = vocabList.style.display === 'none' ? '📚 查看词汇' : '📚 隐藏词汇';
+      });
+      
+      // 添加词汇发音按钮事件
+      card.querySelectorAll('.vocab-speaker').forEach(btn => {
+        btn.addEventListener('click', function() {
+          speakWord(this.dataset.word);
+        });
+      });
+      
+      // 添加关键词点击发音事件
+      card.querySelectorAll('.keyword').forEach(span => {
+        span.addEventListener('click', function() {
+          speakWord(this.dataset.keyword);
+        });
+      });
+    });
+    
+
+  } else if (mode === 'wordlist') {
     // 单词表模式
     if (words.length === 0) {
       container.innerHTML = `
@@ -336,6 +445,31 @@ function speakWord(word) {
     u.lang = 'en-US';
     speechSynthesis.speak(u);
   }
+}
+
+// 朗读整个文章
+function readAloudArticle(content) {
+  if ('speechSynthesis' in window) {
+    // 先停止可能正在进行的朗读
+    speechSynthesis.cancel();
+    
+    // 移除关键词标记并朗读
+    const cleanContent = content.replace(/<[^>]*>/g, '');
+    const u = new SpeechSynthesisUtterance(cleanContent);
+    u.lang = 'en-US';
+    u.rate = 0.8; // 稍微降低语速
+    speechSynthesis.speak(u);
+  }
+}
+
+// 获取指定类别的文章
+function getReadingArticles(category = "all") {
+  if (!window.readingArticles) return [];
+  
+  if (category === "all") {
+    return window.readingArticles;
+  }
+  return window.readingArticles.filter(article => article.category === category);
 }
 
 function getRandomOptions(correctAnswer, count) {

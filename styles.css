@@ -19,7 +19,7 @@ button {
 }
 button:hover { background:#2c65b8; transform: translateY(-2px); }
 #show-all-btn{background:#00d2ff;} #submit-btn{background:#00b09b;} #reset-btn{background:#ff416c;}
-.cards-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:25px;width:100%;max-width:100%;}
+.cards-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:25px;}
 .word-card{background:white;border-radius:16px;padding:20px;box-shadow:0 8px 20px rgba(0,0,0,.1);}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;}
 .word-index{background:#3a7bd5;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;}
@@ -72,211 +72,6 @@ button:hover { background:#2c65b8; transform: translateY(-2px); }
   border-radius: 4px;
   font-size: 0.9rem;
   margin-top: 5px;
-}
-
-/* 阅读模式样式 */
-.reading-card {
-  background: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 8px 20px rgba(0,0,0,.1);
-  margin: 20px auto;
-  width: 100%;
-  max-width: 1200px;
-  height: auto;
-  min-height: 500px;
-  box-sizing: border-box;
-}
-
-/* 媒体查询 - 小屏幕设备优化 */
-@media (max-width: 768px) {
-  .reading-card {
-    width: 95%;
-    height: auto;
-    min-height: 400px;
-    padding: 20px 15px;
-    border-radius: 12px;
-    margin: 10px auto;
-  }
-  
-  .reading-header h2 {
-    font-size: 1.8rem;
-  }
-  
-  .reading-header h3 {
-    font-size: 1.3rem;
-  }
-  
-  .reading-content {
-    font-size: 1.1rem;
-    line-height: 1.7;
-  }
-  
-  .reading-content p {
-    text-indent: 20px;
-  }
-}
-
-.reading-header {
-  text-align: center;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #e4edf5;
-}
-
-.reading-header h2 {
-  color: #3a7bd5;
-  font-size: 2.4rem;
-  margin-bottom: 12px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-}
-
-.reading-header h3 {
-  color: #6c757d;
-  font-size: 1.5rem;
-  margin-bottom: 15px;
-  font-weight: 500;
-}
-
-.reading-category {
-  display: inline-block;
-  background-color: #e4edf5;
-  color: #3a7bd5;
-  padding: 6px 20px;
-  border-radius: 20px;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.reading-content {
-  font-size: 1.25rem;
-  line-height: 1.85;
-  color: #333;
-  margin-bottom: 30px;
-  letter-spacing: 0.2px;
-  word-spacing: 0.5px;
-}
-
-.reading-content p {
-  margin-bottom: 20px;
-  text-align: justify;
-  text-indent: 2em;
-}
-
-.reading-content .keyword {
-  background-color: #fff9c4;
-  color: #e65100;
-  padding: 2px 5px;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.reading-content .keyword:hover {
-  background-color: #ffeb3b;
-  transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.keyword {
-  background-color: #fff3cd;
-  color: #856404;
-  padding: 2px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s ease;
-}
-
-.keyword:hover {
-  background-color: #ffeaa7;
-  transform: scale(1.05);
-}
-
-.reading-actions {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-bottom: 25px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.read-aloud-btn,
-.show-vocab-btn {
-  background: #3a7bd5;
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 50px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 600;
-  transition: all .3s ease;
-  box-shadow: 0 4px 8px rgba(58,123,213,0.3);
-}
-
-.read-aloud-btn:hover,
-.show-vocab-btn:hover {
-  background: #2c65b8;
-  transform: translateY(-2px);
-}
-
-.vocab-list {
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 12px;
-  margin-top: 20px;
-}
-
-.vocab-list h4 {
-  color: #3a7bd5;
-  font-size: 1.3rem;
-  margin-bottom: 15px;
-  text-align: center;
-}
-
-.vocab-items {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.vocab-item {
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.vocab-keyword {
-  font-weight: bold;
-  color: #3a7bd5;
-  flex: 1;
-}
-
-.vocab-chinese {
-  color: #6c757d;
-  flex: 1;
-}
-
-.vocab-speaker {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: #3a7bd5;
-  padding: 5px;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
-}
-
-.vocab-speaker:hover {
-  background-color: #e4edf5;
 }
 
 /* 原有单词表样式 */
@@ -614,4 +409,321 @@ button:hover { background:#2c65b8; transform: translateY(-2px); }
   #word-level-selector {
     width: 100%;
   }
+}
+
+/* 单词图片样式 */
+.chinese-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.word-image {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.word-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.image-caption {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ff6b6b;
+  text-align: center;
+  margin-top: 5px;
+}
+
+/* 迷你图片样式 - 用于答案显示 */
+.mini-image {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin: 0 3px;
+}
+
+/* 两列布局中的图片样式 */
+.two-column-card .chinese-image {
+  margin-bottom: 0;
+}
+
+.two-column-card .word-image {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 5px;
+}
+
+.two-column-card .image-caption {
+  font-size: 1rem;
+}
+
+/* 响应式图片大小调整 */
+@media (max-width: 768px) {
+  .word-image {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .two-column-card .word-image {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .word-image {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .two-column-card {
+    flex-direction: column;
+  }
+  
+  .two-column-card .left-column {
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding-right: 0;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+  
+  .two-column-card .right-column {
+    padding-left: 0;
+  }
+  
+  .two-column-card .word-image {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* 阅读模式样式 */
+.reading-card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    border: 1px solid #e0e0e0;
+}
+
+.reading-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.reading-header h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.reading-header h3 {
+    color: #34495e;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: normal;
+}
+
+.reading-category {
+    display: inline-block;
+    padding: 5px 15px;
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.reading-content {
+    margin-bottom: 25px;
+    line-height: 1.8;
+    font-size: 16px;
+}
+
+.reading-content p {
+    margin-bottom: 15px;
+    text-align: justify;
+    padding: 8px 0;
+    transition: all 0.3s ease;
+}
+
+.reading-content p.highlight {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding-left: 15px;
+    animation: fadeInHighlight 0.3s ease;
+}
+
+@keyframes fadeInHighlight {
+    from {
+        background-color: transparent;
+        border-left-color: transparent;
+    }
+    to {
+        background-color: #fff3cd;
+        border-left-color: #ffc107;
+    }
+}
+
+.keyword {
+    background-color: #e3f2fd;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #1976d2;
+}
+
+.keyword:hover {
+    background-color: #bbdefb;
+    transform: scale(1.05);
+}
+
+.reading-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.read-aloud-btn, .show-vocab-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.read-aloud-btn {
+    background-color: #3498db;
+    color: white;
+}
+
+.read-aloud-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.show-vocab-btn {
+    background-color: #9b59b6;
+    color: white;
+}
+
+.show-vocab-btn:hover {
+    background-color: #8e44ad;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(155, 89, 182, 0.3);
+}
+
+.vocab-list {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.vocab-list h4 {
+    margin-top: 0;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.vocab-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.vocab-item {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* 统一图片大小和样式 */
+.vocab-image {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    margin: 0 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    padding: 2px;
+  }
+  
+  /* 中文释义答案显示样式 */
+  .chinese-answer {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 14px;
+    margin-left: 8px;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+.vocab-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.vocab-keyword {
+    font-weight: bold;
+    color: #2c3e50;
+    margin-right: 8px;
+}
+
+.vocab-chinese {
+    color: #7f8c8d;
+    margin-right: 8px;
+}
+
+.vocab-speaker {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #3498db;
+    transition: color 0.3s ease;
+}
+
+.vocab-speaker:hover {
+    color: #2980b9;
 }

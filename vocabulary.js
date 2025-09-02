@@ -301,13 +301,7 @@ const vocabularyList = [
   { chinese: "雨", english: "Rain", phonetic: "/reɪn/", category: "weather" },
   { chinese: "雪", english: "Snow", phonetic: "/snəʊ/", category: "weather" },
   { chinese: "风", english: "Wind", phonetic: "/wɪnd/", category: "weather" },
-  { chinese: "晴天", english: "Sunny", phonetic: "/ˈsʌni/", category: "weather" },
-  { chinese: "多云", english: "Cloudy", phonetic: "/ˈklaʊdi/", category: "weather" },
-  { chinese: "下雨", english: "Rainy", phonetic: "/ˈreɪni/", category: "weather" },
-  { chinese: "下雪", english: "Snowy", phonetic: "/ˈsnəʊi/", category: "weather" },
-  { chinese: "刮风", english: "Windy", phonetic: "/ˈwɪndi/", category: "weather" },
   { chinese: "雾", english: "Fog", phonetic: "/fɒɡ/", category: "weather" },
-  { chinese: "雾天", english: "Foggy", phonetic: "/ˈfɒɡi/", category: "weather" },
   { chinese: "雷", english: "Thunder", phonetic: "/ˈθʌndə/", category: "weather" },
   { chinese: "闪电", english: "Lightning", phonetic: "/ˈlaɪtnɪŋ/", category: "weather" },
   { chinese: "雷阵雨", english: "Thunderstorm", phonetic: "/ˈθʌndəstɔːm/", category: "weather" },
@@ -363,15 +357,7 @@ const vocabularyList = [
   { chinese: "兴奋", english: "Excited", phonetic: "/ɪkˈsaɪtɪd/", category: "emotion" },
   { chinese: "平静", english: "Calm", phonetic: "/kɑːm/", category: "emotion" },
   { chinese: "紧张", english: "Nervous", phonetic: "/ˈnɜːvəs/", category: "emotion" },
-  { chinese: "害羞", english: "Shy", phonetic: "/ʃaɪ/", category: "emotion" },
-  { chinese: "勇敢", english: "Brave", phonetic: "/breɪv/", category: "emotion" },
-  { chinese: "聪明", english: "Smart", phonetic: "/smɑːt/", category: "emotion" },
-  { chinese: "愚蠢", english: "Silly", phonetic: "/ˈsɪli/", category: "emotion" },
-  { chinese: "漂亮", english: "Beautiful", phonetic: "/ˈbjuːtɪfl/", category: "emotion" },
-  { chinese: "丑陋", english: "Ugly", phonetic: "/ˈʌɡli/", category: "emotion" },
-  { chinese: "善良", english: "Kind", phonetic: "/kaɪnd/", category: "emotion" },
-  { chinese: "友好", english: "Friendly", phonetic: "/ˈfrendli/", category: "emotion" },
-  { chinese: "可爱", english: "Cute", phonetic: "/kjuːt/", category: "emotion" }
+  { chinese: "害羞", english: "Shy", phonetic: "/ʃaɪ/", category: "emotion" }
 ];
 
 window.vocabularyList = vocabularyList;

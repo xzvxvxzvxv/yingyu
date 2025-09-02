@@ -1,10 +1,14 @@
 // 直接使用全局变量 window.vocabularyList
 // 确保在HTML中先加载vocabulary.js，再加载app.js
 
+// 全局变量
 let currentWords = [];
 const numCards = 10;
 // 存储错误单词的对象，格式: {wordId: {word: {...}, errorCount: number}}
 let errorWords = {};
+
+// 透明占位符 (1x1 像素透明图片的 base64 编码)
+const TRANSPARENT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48bGluZSB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSIgc3Ryb2tlPSIjZmZmZmZmMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PGxpbmUgeDE9IjAiIHkxPSIxIiB4Mj0iMSIgeTI9IjAiIHN0cm9rZT0iI2ZmZmZmZjAiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==';
 
 // 从localStorage加载错误单词
 function loadErrorWords() {
@@ -28,10 +32,157 @@ function saveErrorWords() {
   }
 }
 
+// 设置图片懒加载
+function setupLazyLoading() {
+  // 检查浏览器是否支持 IntersectionObserver
+  if ('IntersectionObserver' in window) {
+    // 创建一个观察器实例
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        // 如果元素进入视口
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          // 获取真实的图片路径
+          const src = img.dataset.src;
+          
+          if (src) {
+            // 加载真实图片
+            img.src = src;
+            // 移除占位符属性
+            img.removeAttribute('data-src');
+            // 停止观察这个元素
+            observer.unobserve(img);
+            
+            // 加载完成后处理
+            img.onload = function() {
+              this.classList.add('loaded');
+              if (this.classList.contains('loading')) {
+                this.classList.remove('loading');
+              }
+            };
+            
+            // 加载失败时的处理
+            img.onerror = function() {
+              handleImageError(this);
+            };
+          }
+        }
+      });
+    }, {
+      // 配置观察器选项
+      rootMargin: '0px 0px 200px 0px', // 提前200px开始加载
+      threshold: 0.1
+    });
+    
+    // 观察所有带有data-src属性的图片
+    document.querySelectorAll('img[data-src]').forEach(img => {
+      imageObserver.observe(img);
+    });
+  } else {
+    // 对于不支持IntersectionObserver的浏览器，使用传统的懒加载方式
+    const lazyLoadImages = () => {
+      const images = document.querySelectorAll('img[data-src]');
+      
+      images.forEach(img => {
+        // 检查图片是否在视口中
+        if (isInViewport(img)) {
+          const src = img.dataset.src;
+          if (src) {
+            img.src = src;
+            img.removeAttribute('data-src');
+            
+            img.onload = function() {
+              this.classList.add('loaded');
+              if (this.classList.contains('loading')) {
+                this.classList.remove('loading');
+              }
+            };
+            
+            img.onerror = function() {
+              handleImageError(this);
+            };
+          }
+        }
+      });
+    };
+    
+    // 检查元素是否在视口中的辅助函数
+    function isInViewport(el) {
+      const rect = el.getBoundingClientRect();
+      return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+      );
+    }
+    
+    // 在滚动和调整窗口大小时检查图片
+    window.addEventListener('scroll', lazyLoadImages);
+    window.addEventListener('resize', lazyLoadImages);
+    
+    // 初始加载
+    lazyLoadImages();
+  }
+}
+
+// 预加载关键图片
+function preloadCriticalImages() {
+  if (!currentWords || currentWords.length === 0) {
+    console.log('没有需要预加载的单词图片');
+    return;
+  }
+  
+  try {
+    // 获取前5个单词的图片路径（或者更少，如果总数量不足5个）
+    const criticalImages = currentWords.slice(0, 5);
+    
+    // 遍历关键图片并预加载
+    criticalImages.forEach(word => {
+      try {
+        // 如果word本身就是一个单词对象
+        let chinese = word.chinese;
+        let category = word.category;
+        
+        // 检查word的结构，可能需要根据不同模式调整
+        if (word.word) {
+          // 复习模式下，word是一个包含word属性的对象
+          chinese = word.word.chinese;
+          category = word.word.category;
+        }
+        
+        if (chinese && category) {
+          const imagePath = getWordImagePath(chinese, category);
+          
+          // 创建一个新的Image对象进行预加载
+          const img = new Image();
+          img.src = imagePath;
+          
+          // 预加载完成的回调
+          img.onload = function() {
+            console.log(`预加载图片成功: ${imagePath}`);
+          };
+          
+          // 预加载失败的回调
+          img.onerror = function() {
+            console.warn(`预加载图片失败: ${imagePath}`);
+          };
+        }
+      } catch (error) {
+        console.error(`预加载单词图片时出错: ${error.message}`);
+      }
+    });
+  } catch (error) {
+    console.error(`预加载关键图片时出错: ${error.message}`);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadErrorWords();
   initializeGame();
   setupEvents();
+  // 设置懒加载
+  setupLazyLoading();
 });
 
 function initializeGame() {
@@ -53,6 +204,9 @@ function initializeGame() {
   
   renderCards(currentWords);
   document.getElementById('result-container').innerHTML = '';
+  
+  // 预加载核心图片
+  preloadCriticalImages();
 
   // 如果是复习模式且没有错误单词，显示提示
   if (mode === 'review' && currentWords.length === 0) {
@@ -894,7 +1048,7 @@ function renderCards(words) {
         </div>
         <div class="right-column">
             <div class="chinese-image">
-              <img src="${imagePath}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}" onload="this.classList.remove('loading')">
+              <img data-src="${imagePath}" src="${TRANSPARENT_PLACEHOLDER}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}">
             </div>
             <div class="phonetic">${w.phonetic}</div>
           <div class="category">${getCategoryName(w.category)}</div>
@@ -929,7 +1083,7 @@ function renderCards(words) {
         card.innerHTML = `
           <div class="card-header"><div class="word-index">${i+1}</div><button class="speaker-btn dictation-btn">🔈</button></div>
           <div class="chinese-image">
-            <img src="${imagePath}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}" onload="this.classList.remove('loading')">
+            <img data-src="${imagePath}" src="${TRANSPARENT_PLACEHOLDER}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}">
           </div>
           <div class="phonetic">${w.phonetic}</div>
           <div class="listening-options">
@@ -946,14 +1100,14 @@ function renderCards(words) {
           <div class="dictation-prompt">听发音，写出单词</div>
           <div class="input-container"><input type="text" class="answer-input" data-index="${i}" placeholder="输入英文单词">
           <button class="show-answer-btn dictation-btn">显示答案</button></div>
-          <div class="correct-answer">正确答案: <strong>${w.english}</strong> (${w.chinese} <img src="${imagePath}" alt="${w.chinese}" class="mini-image word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}" onload="this.classList.remove('loading')"> ${w.phonetic})</div>`;
+          <div class="correct-answer">正确答案: <strong>${w.english}</strong> (${w.chinese} <img data-src="${imagePath}" src="${TRANSPARENT_PLACEHOLDER}" alt="${w.chinese}" class="mini-image word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}"> ${w.phonetic})</div>`;
       } else if (mode === 'review') {
         // 复习模式
         card.innerHTML = `
           <div class="card-header"><div class="word-index">${i+1}</div><button class="speaker-btn">🔈</button></div>
           <div class="review-prompt">复习单词 (已错误 ${errorCount} 次)</div>
           <div class="chinese-image">
-            <img src="${imagePath}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}" onload="this.classList.remove('loading')">
+            <img data-src="${imagePath}" src="${TRANSPARENT_PLACEHOLDER}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}">
           </div>
           <div class="phonetic">${w.phonetic}</div>
           <div class="input-container"><input type="text" class="answer-input" data-index="${i}" placeholder="输入英文单词">
@@ -979,7 +1133,7 @@ function renderCards(words) {
           <div class="card-header"><div class="word-index">${i+1}</div><button class="speaker-btn">🔈</button></div>
           <div class="category-badge">${getCategoryName(w.category)}</div>
           <div class="chinese-image">
-            <img src="${imagePath}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}" onload="this.classList.remove('loading')">
+            <img data-src="${imagePath}" src="${TRANSPARENT_PLACEHOLDER}" alt="${w.chinese}" class="word-image ${categoryClass} loading" onerror="handleImageError(this)" data-word="${w.chinese}">
           </div>
           <div class="phonetic">${w.phonetic}</div>
           <div class="input-container"><input type="text" class="answer-input" data-index="${i}" placeholder="输入英文单词">

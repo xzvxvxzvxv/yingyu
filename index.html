@@ -23,6 +23,7 @@
       <option value="wordlist">单词表</option>
       <option value="word-to-chinese">看单词选中文</option>
       <option value="reading">阅读模式</option>
+      <option value="recommended">每日推荐学习</option>
     </select>
     <select class="category-selector" id="category-selector" disabled>
       <option value="all">所有类别</option>
@@ -43,6 +44,7 @@
     <button id="show-all-btn">显示全部答案</button>
     <button id="submit-btn">提交答案</button>
     <button id="reset-btn">清空答案</button>
+    <button id="next-group-btn" style="display:none;">下一组</button>
   </div>
 
   <div class="cards-container" id="cards-container"></div>
@@ -52,5 +54,21 @@
 <script src="vocabulary.js"></script>
 <script src="reading.js"></script>
 <script src="app.js"></script>
+
+<!-- 自定义对话框 -->
+<div id="custom-dialog" class="custom-dialog" style="display: none;">
+  <div class="dialog-content">
+    <div class="dialog-header">
+      <h3>🎉 新的一天开始了！</h3>
+    </div>
+    <div class="dialog-body">
+      <p>是否学习今天的新单词？</p>
+    </div>
+    <div class="dialog-footer">
+      <button id="dialog-yes" class="dialog-btn yes-btn">确定</button>
+      <button id="dialog-no" class="dialog-btn no-btn">取消</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

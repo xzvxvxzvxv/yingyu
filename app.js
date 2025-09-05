@@ -4,8 +4,13 @@
 // 全局变量
 let currentWords = [];
 const numCards = 10;
+const recommendedNumCards = 20; // 每日推荐学习的单词数量
 // 存储错误单词的对象，格式: {wordId: {word: {...}, errorCount: number}}
 let errorWords = {};
+// 存储每日推荐学习的单词
+let dailyWords = [];
+// 存储当前组索引
+let currentGroupIndex = 0;
 
 // 透明占位符 (1x1 像素透明图片的 base64 编码)
 const TRANSPARENT_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48bGluZSB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSIgc3Ryb2tlPSIjZmZmZmZmMCIgc3Ryb2tlLXdpZHRoPSIxIi8+PGxpbmUgeDE9IjAiIHkxPSIxIiB4Mj0iMSIgeTI9IjAiIHN0cm9rZT0iI2ZmZmZmZjAiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==';
@@ -23,6 +28,90 @@ function loadErrorWords() {
   }
 }
 
+// 从localStorage加载每日学习单词
+function loadDailyWords() {
+  const saved = localStorage.getItem('dailyWords');
+  const savedDate = localStorage.getItem('dailyWordsDate');
+  const today = new Date().toDateString();
+  
+  // 如果存储的日期不是今天，生成新的每日单词
+  if (!saved || savedDate !== today) {
+    return false;
+  }
+  
+  try {
+    dailyWords = JSON.parse(saved);
+    return true;
+  } catch (e) {
+    console.error('Failed to load daily words:', e);
+    dailyWords = [];
+    return false;
+  }
+}
+
+// 保存每日学习单词到localStorage
+function saveDailyWords() {
+  try {
+    localStorage.setItem('dailyWords', JSON.stringify(dailyWords));
+    localStorage.setItem('dailyWordsDate', new Date().toDateString());
+  } catch (e) {
+    console.error('Failed to save daily words:', e);
+  }
+}
+
+// 获取每日推荐学习的单词
+function getDailyRecommendedWords() {
+  // 如果已加载今日单词，直接返回
+  if (loadDailyWords()) {
+    return dailyWords;
+  }
+  
+  // 否则生成新的每日单词
+  // 首先从错误单词中选择部分单词
+  const errorWordsList = Object.values(errorWords).map(item => item.word);
+  // 然后从所有单词中随机选择剩余的单词，但排除已选择的错误单词
+  const allWords = window.vocabularyList.filter(word => {
+    const wordId = word.english.toLowerCase() + '-' + word.category;
+    return !errorWords[wordId];
+  });
+  
+  // 打乱顺序
+  const shuffledAllWords = [...allWords].sort(() => 0.5 - Math.random());
+  
+  // 计算需要从错误单词和所有单词中各选择多少
+  // 增加总单词量以支持多组学习
+  const totalWords = recommendedNumCards * 3; // 生成3组单词量
+  const maxErrorWords = Math.min(errorWordsList.length, totalWords * 0.4); // 40%来自错误单词
+  const remainingWords = totalWords - maxErrorWords;
+  
+  // 随机选择错误单词
+  const selectedErrorWords = [...errorWordsList].sort(() => 0.5 - Math.random()).slice(0, maxErrorWords);
+  // 随机选择其他单词
+  const selectedOtherWords = shuffledAllWords.slice(0, remainingWords);
+  
+  // 合并并打乱顺序
+  dailyWords = [...selectedErrorWords, ...selectedOtherWords].sort(() => 0.5 - Math.random());
+  
+  // 保存到localStorage
+  saveDailyWords();
+  
+  return dailyWords;
+}
+
+// 获取当前组的单词
+function getCurrentGroupWords() {
+  const startIndex = currentGroupIndex * recommendedNumCards;
+  const endIndex = startIndex + recommendedNumCards;
+  // 获取当前组的单词并打乱顺序
+  const currentGroup = dailyWords.slice(startIndex, endIndex);
+  return [...currentGroup].sort(() => 0.5 - Math.random());
+}
+
+// 检查是否还有下一组
+function hasNextGroup() {
+  return (currentGroupIndex + 1) * recommendedNumCards < dailyWords.length;
+}
+
 // 保存错误单词到localStorage
 function saveErrorWords() {
   try {
@@ -33,50 +122,64 @@ function saveErrorWords() {
 }
 
 // 设置图片懒加载
+let lazyLoadObserver = null;
+
 function setupLazyLoading() {
   // 检查浏览器是否支持 IntersectionObserver
   if ('IntersectionObserver' in window) {
     // 创建一个观察器实例
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        // 如果元素进入视口
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          // 获取真实的图片路径
-          const src = img.dataset.src;
-          
-          if (src) {
-            // 加载真实图片
-            img.src = src;
-            // 移除占位符属性
-            img.removeAttribute('data-src');
-            // 停止观察这个元素
-            observer.unobserve(img);
+    if (!lazyLoadObserver) {
+      lazyLoadObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          // 如果元素进入视口
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            // 检查是否已经处理过
+            if (img.classList.contains('observed')) return;
             
-            // 加载完成后处理
-            img.onload = function() {
-              this.classList.add('loaded');
-              if (this.classList.contains('loading')) {
-                this.classList.remove('loading');
-              }
-            };
+            // 获取真实的图片路径
+            const src = img.dataset.src;
             
-            // 加载失败时的处理
-            img.onerror = function() {
-              handleImageError(this);
-            };
+            if (src) {
+              // 标记为已观察
+              img.classList.add('observed');
+              
+              // 加载真实图片
+              img.src = src;
+              // 移除占位符属性
+              img.removeAttribute('data-src');
+              // 停止观察这个元素
+              observer.unobserve(img);
+              
+              // 加载完成后处理
+              img.onload = function() {
+                this.classList.add('loaded');
+                if (this.classList.contains('loading')) {
+                  this.classList.remove('loading');
+                }
+              };
+              
+              // 加载失败时的处理
+              img.onerror = function() {
+                handleImageError(this);
+              };
+            }
           }
-        }
+        });
+      }, {
+        // 配置观察器选项
+        rootMargin: '0px 0px 200px 0px', // 提前200px开始加载
+        threshold: 0.1
       });
-    }, {
-      // 配置观察器选项
-      rootMargin: '0px 0px 200px 0px', // 提前200px开始加载
-      threshold: 0.1
-    });
+    }
     
     // 观察所有带有data-src属性的图片
     document.querySelectorAll('img[data-src]').forEach(img => {
-      imageObserver.observe(img);
+      // 避免重复观察
+      if (!img.classList.contains('observed')) {
+        lazyLoadObserver.observe(img);
+        // 不要在这里添加'observed'类，只有在元素进入视口并实际加载图片时才添加
+      }
     });
   } else {
     // 对于不支持IntersectionObserver的浏览器，使用传统的懒加载方式
@@ -177,12 +280,119 @@ function preloadCriticalImages() {
   }
 }
 
+// 检查是否需要显示每日新单词提示
+function checkDailyNewWordsPrompt() {
+  // 只在每日推荐模式中显示提示
+  const currentMode = document.getElementById('mode-selector').value;
+  if (currentMode !== 'recommended') {
+    return;
+  }
+  
+  const now = new Date();
+  const beijingTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // 转换为北京时间
+  
+  // 显示对话框（临时移除localStorage检查以便测试）
+  if (beijingTime.getHours() >= 0 && beijingTime.getHours() < 24) {
+    // 显示自定义对话框
+    const customDialog = document.getElementById('custom-dialog');
+    const dialogYes = document.getElementById('dialog-yes');
+    const dialogNo = document.getElementById('dialog-no');
+    
+    // 显示对话框并禁止背景滚动
+    customDialog.style.display = 'flex';
+    document.body.classList.add('no-scroll');
+    
+    // 确定按钮点击事件
+    const handleYes = function() {
+      // 移除事件监听器
+      dialogYes.removeEventListener('click', handleYes);
+      dialogNo.removeEventListener('click', handleNo);
+      
+      // 隐藏对话框并恢复背景滚动
+      customDialog.style.display = 'none';
+      document.body.classList.remove('no-scroll');
+      
+      // 用户点击确定，切换到每日推荐模式并生成新单词
+      document.getElementById('mode-selector').value = 'recommended';
+      initializeGame();
+    };
+    
+    // 取消按钮点击事件
+    const handleNo = function() {
+      // 移除事件监听器
+      dialogYes.removeEventListener('click', handleYes);
+      dialogNo.removeEventListener('click', handleNo);
+      
+      // 隐藏对话框并恢复背景滚动
+      customDialog.style.display = 'none';
+      document.body.classList.remove('no-scroll');
+      
+      // 用户点击取消，添加"学习新单词"按钮
+      addNewWordsButton();
+    };
+  
+    // 添加事件监听器
+    dialogYes.addEventListener('click', handleYes);
+    dialogNo.addEventListener('click', handleNo);
+  }
+}
+
+// 清除localStorage数据（用于测试）
+function clearLocalStorageData() {
+  try {
+    localStorage.removeItem('dailyWords');
+    localStorage.removeItem('dailyWordsDate');
+    // 重置全局变量
+    dailyWords = [];
+    currentGroupIndex = 0;
+    console.log('LocalStorage数据已清除，将重新生成每日单词');
+  } catch (e) {
+    console.error('清除localStorage数据时出错:', e);
+  }
+}
+
+// 添加"学习新单词"按钮
+function addNewWordsButton() {
+  // 检查按钮是否已经存在
+  if (document.getElementById('new-words-btn')) {
+    return;
+  }
+  
+  // 只在每日推荐模式中显示按钮
+  const currentMode = document.getElementById('mode-selector').value;
+  if (currentMode !== 'recommended') {
+    return;
+  }
+  
+  const controls = document.querySelector('.controls');
+  const newWordsButton = document.createElement('button');
+  newWordsButton.id = 'new-words-btn';
+  newWordsButton.textContent = '学习新单词';
+  newWordsButton.className = 'new-words-btn';
+  
+  // 添加点击事件
+  newWordsButton.addEventListener('click', function() {
+    document.getElementById('mode-selector').value = 'recommended';
+    initializeGame();
+    // 移除按钮
+    this.remove();
+  });
+  
+  // 添加到控制区域
+  controls.appendChild(newWordsButton);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadErrorWords();
   initializeGame();
   setupEvents();
   // 设置懒加载
   setupLazyLoading();
+  
+  // 检查页面加载时是否为每日推荐模式，如果是，显示提示
+  if (document.getElementById('mode-selector').value === 'recommended') {
+    checkDailyNewWordsPrompt();
+  }
 });
 
 function initializeGame() {
@@ -199,7 +409,8 @@ function initializeGame() {
     // 阅读模式下，我们直接调用getRandomWords来获取文章数据
     currentWords = getRandomWords(0); // 0表示不限制数量
   } else {
-    currentWords = getRandomWords(numCards);
+    const count = mode === 'recommended' ? recommendedNumCards : numCards;
+    currentWords = getRandomWords(count);
   }
   
   renderCards(currentWords);
@@ -222,29 +433,71 @@ function initializeGame() {
 }
 
 function setupEvents() {
-  document.getElementById('mode-selector').addEventListener('change', function() {
-    const categorySelector = document.getElementById('category-selector');
-    if (this.value === 'category' || this.value === 'dictation' || this.value === 'review' || this.value === 'listening' || this.value === 'wordlist' || this.value === 'word-to-chinese' || this.value === 'reading') {
-      categorySelector.disabled = false;
-    } else {
-      categorySelector.disabled = true;
-    }
+    // 添加清除localStorage数据按钮
+    const controls = document.querySelector('.controls');
+    const clearDataButton = document.createElement('button');
+    clearDataButton.id = 'clear-data-btn';
+    clearDataButton.textContent = '重置每日单词';
+    clearDataButton.className = 'btn clear-data-btn';
+    clearDataButton.style.marginLeft = '10px';
+    clearDataButton.style.backgroundColor = '#ff6b6b';
     
-    // 控制按钮显示和隐藏
-    const isReadingMode = this.value === 'reading';
-    document.getElementById('new-game-btn').style.display = isReadingMode ? 'none' : 'inline-block';
-    document.getElementById('show-all-btn').style.display = isReadingMode ? 'none' : 'inline-block';
-    document.getElementById('submit-btn').style.display = isReadingMode ? 'none' : 'inline-block';
-    document.getElementById('reset-btn').style.display = isReadingMode ? 'none' : 'inline-block';
+    // 添加点击事件
+    clearDataButton.addEventListener('click', function() {
+      clearLocalStorageData();
+      initializeGame();
+      alert('已重置每日单词数据，将生成新的单词组');
+    });
     
-    initializeGame();
-  });
-
-  document.getElementById('category-selector').addEventListener('change', initializeGame);
-  document.getElementById('new-game-btn').addEventListener('click', initializeGame);
-  document.getElementById('show-all-btn').addEventListener('click', () =>
-    document.querySelectorAll('.correct-answer').forEach(e => e.style.display = 'block')
-  );
+    // 添加到控制区域
+    controls.appendChild(clearDataButton);
+    
+    // 初始设置 - 只在每日推荐模式下显示
+    const initialMode = document.getElementById('mode-selector').value;
+    const isInitiallyRecommendedMode = initialMode === 'recommended';
+    clearDataButton.style.display = isInitiallyRecommendedMode ? 'inline-block' : 'none';
+    
+    document.getElementById('mode-selector').addEventListener('change', function() {
+      const categorySelector = document.getElementById('category-selector');
+      if (this.value === 'category' || this.value === 'dictation' || this.value === 'review' || this.value === 'listening' || this.value === 'wordlist' || this.value === 'word-to-chinese' || this.value === 'reading') {
+        categorySelector.disabled = false;
+      } else {
+        categorySelector.disabled = true;
+      }
+      
+      // 控制按钮显示和隐藏
+      const isReadingMode = this.value === 'reading';
+      const isRecommendedMode = this.value === 'recommended';
+      document.getElementById('new-game-btn').style.display = isReadingMode ? 'none' : 'inline-block';
+      document.getElementById('show-all-btn').style.display = isReadingMode ? 'none' : 'inline-block';
+      document.getElementById('submit-btn').style.display = isReadingMode ? 'none' : 'inline-block';
+      document.getElementById('reset-btn').style.display = isReadingMode ? 'none' : 'inline-block';
+      document.getElementById('next-group-btn').style.display = isRecommendedMode ? 'inline-block' : 'none';
+      
+      // 控制学习新单词按钮的显示/隐藏
+      const newWordsBtn = document.getElementById('new-words-btn');
+      if (newWordsBtn) {
+        newWordsBtn.style.display = isRecommendedMode ? 'inline-block' : 'none';
+      }
+      
+      // 控制重置每日单词按钮的显示/隐藏
+      clearDataButton.style.display = isRecommendedMode ? 'inline-block' : 'none';
+      
+      // 重置当前组索引
+      if (isRecommendedMode) {
+        currentGroupIndex = 0;
+        // 检查是否需要显示每日新单词提示
+        checkDailyNewWordsPrompt();
+      }
+      
+      initializeGame();
+    });
+    
+    document.getElementById('category-selector').addEventListener('change', initializeGame);
+    document.getElementById('new-game-btn').addEventListener('click', initializeGame);
+    document.getElementById('show-all-btn').addEventListener('click', () =>
+      document.querySelectorAll('.correct-answer').forEach(e => e.style.display = 'block')
+    );
   document.getElementById('submit-btn').addEventListener('click', checkAnswers);
   document.getElementById('reset-btn').addEventListener('click', () =>
     document.querySelectorAll('.answer-input').forEach(i => {
@@ -253,20 +506,43 @@ function setupEvents() {
     })
   );
   
+  // 添加下一组按钮事件监听
+  document.getElementById('next-group-btn').addEventListener('click', () => {
+    const mode = document.getElementById('mode-selector').value;
+    if (mode === 'recommended' && hasNextGroup()) {
+      currentGroupIndex++;
+      initializeGame();
+    }
+  });
+  
   // 确保页面加载时按钮状态正确
   const modeSelector = document.getElementById('mode-selector');
   const isReadingMode = modeSelector.value === 'reading';
+  const isRecommendedMode = modeSelector.value === 'recommended';
   document.getElementById('new-game-btn').style.display = isReadingMode ? 'none' : 'inline-block';
   document.getElementById('show-all-btn').style.display = isReadingMode ? 'none' : 'inline-block';
   document.getElementById('submit-btn').style.display = isReadingMode ? 'none' : 'inline-block';
   document.getElementById('reset-btn').style.display = isReadingMode ? 'none' : 'inline-block';
+  document.getElementById('next-group-btn').style.display = isRecommendedMode ? 'inline-block' : 'none';
+  
+  // 确保页面加载时学习新单词按钮状态正确
+  const newWordsBtn = document.getElementById('new-words-btn');
+  if (newWordsBtn) {
+    newWordsBtn.style.display = isRecommendedMode ? 'inline-block' : 'none';
+  }
 }
 
 function getRandomWords(count) {
   const mode = document.getElementById('mode-selector').value;
   let filteredWords = window.vocabularyList;
 
-  if (mode === 'category') {
+  if (mode === 'recommended') {
+    // 每日推荐学习模式
+    // 获取今日推荐单词
+    getDailyRecommendedWords();
+    // 返回当前组的单词
+    return getCurrentGroupWords();
+  } else if (mode === 'category') {
     const category = document.getElementById('category-selector').value;
     if (category !== 'all') {
       filteredWords = window.vocabularyList.filter(word => word.category === category);
@@ -817,6 +1093,7 @@ function getCategoryName(categoryCode) {
 function checkAnswers() {
   let correctCount = 0;
   const totalCount = currentWords.length;
+  const mode = document.getElementById('mode-selector').value;
   
   document.querySelectorAll('.answer-input').forEach(input => {
     const index = parseInt(input.dataset.index);
@@ -846,15 +1123,35 @@ function checkAnswers() {
   
   // 显示结果
   const resultContainer = document.getElementById('result-container');
-  resultContainer.innerHTML = `
-    <div class="result-summary">
-      <h3>答题结果</h3>
-      <p>答对 ${correctCount} 题，答错 ${totalCount - correctCount} 题</p>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: ${(correctCount / totalCount) * 100}%"></div>
+  
+  if (mode === 'recommended') {
+    // 每日推荐学习模式的特殊结果显示
+    const hasMoreGroups = hasNextGroup();
+    resultContainer.innerHTML = `
+      <div class="result-summary">
+        <h3>答题结果</h3>
+        <p>答对 ${correctCount} 题，答错 ${totalCount - correctCount} 题</p>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${(correctCount / totalCount) * 100}%"></div>
+        </div>
+        ${hasMoreGroups ? '<p class="next-group-hint">点击下方"下一组"按钮继续学习</p>' : '<p class="complete-hint">恭喜您完成了今日全部学习任务！</p>'}
       </div>
-    </div>
-  `;
+    `;
+    
+    // 确保下一组按钮正确显示
+    document.getElementById('next-group-btn').style.display = hasMoreGroups ? 'inline-block' : 'none';
+  } else {
+    // 其他模式的常规结果显示
+    resultContainer.innerHTML = `
+      <div class="result-summary">
+        <h3>答题结果</h3>
+        <p>答对 ${correctCount} 题，答错 ${totalCount - correctCount} 题</p>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${(correctCount / totalCount) * 100}%"></div>
+        </div>
+      </div>
+    `;
+  }
 }
 
 function showListeningResults() {
@@ -918,8 +1215,13 @@ function renderCards(words) {
         // 处理关键词高亮
         let processedParagraph = paragraph;
         article.keyWords.forEach(keyword => {
-          const regex = new RegExp(`\\s(${keyword})\\s`, 'g');
-          processedParagraph = processedParagraph.replace(regex, ' <span class="keyword" data-keyword="$1">$1</span> ');
+          // 改进的正则表达式，支持：
+          // 1. 普通单词：被空格包围的关键词
+          // 2. 被方括号包裹的关键词：如[Yellow]、[Blue]
+          // 3. 句子开头或结尾的关键词
+          // 4. 被标点符号包围的关键词
+          const regex = new RegExp(`(^|\\s|\\[)(${keyword})(\\s|\\]|,|\\.|!|\\?)`, 'gi');
+          processedParagraph = processedParagraph.replace(regex, '$1<span class="keyword" data-keyword="$2">$2</span>$3');
         });
         
         return `<p>${processedParagraph}</p>`;
@@ -954,7 +1256,8 @@ function renderCards(words) {
               if (wordEntry) {
                 const imagePath = getWordImagePath(wordEntry.chinese, wordEntry.category);
                 const categoryClass = `category-${wordEntry.category}`;
-                imageHtml = `<img src="${imagePath}" alt="${wordEntry.chinese}" class="vocab-image word-image ${categoryClass} loading" onerror="handleImageError(this)" title="${wordEntry.chinese}" data-title="${wordEntry.chinese}" data-word="${wordEntry.chinese}" onload="this.classList.remove('loading')">`;
+                // 统一使用懒加载机制，与其他模式保持一致
+                imageHtml = `<img data-src="${imagePath}" src="${TRANSPARENT_PLACEHOLDER}" alt="${wordEntry.chinese}" class="vocab-image word-image ${categoryClass} loading" onerror="handleImageError(this)" title="${wordEntry.chinese}" data-title="${wordEntry.chinese}" data-word="${wordEntry.chinese}">`;
                 dataTitle = wordEntry.chinese;
               }
               
@@ -1021,6 +1324,9 @@ function renderCards(words) {
         });
       });
     });
+    
+    // 重新应用懒加载逻辑，确保新添加的图片也能被观察
+    setupLazyLoading();
   } else if (mode === 'wordlist') {
     // 单词表模式
     if (words.length === 0) {
@@ -1067,6 +1373,9 @@ function renderCards(words) {
         speakWord(this.dataset.word);
       });
     });
+    
+    // 重新应用懒加载逻辑，确保新添加的图片也能被观察
+    setupLazyLoading();
   } else {
     // 其他模式
     words.forEach((w, i) => {
@@ -1178,30 +1487,22 @@ function renderCards(words) {
             setTimeout(() => {
               answerStatus.classList.remove('feedback-animation');
             }, 1000);
-            
-            // 更新错误单词记录和答题状态
-            if (isCorrect) {
-              if (errorWords[wordId]) delete errorWords[wordId];
-              window.listeningAnswers.correct++;
-            } else {
-              errorWords[wordId] = errorWords[wordId] || { word: { ...w }, errorCount: 0 };
-              errorWords[wordId].errorCount++;
-            }
-            saveErrorWords();
-            
-            window.listeningAnswers.completed++;
-            
-            // 检查是否所有题目都已完成
-            if (window.listeningAnswers.completed === window.listeningAnswers.total) {
-              showListeningResults();
-            }
           });
         });
-      } else {
-        card.querySelector('.show-answer-btn').addEventListener('click', () => {
-          card.querySelector('.correct-answer').style.display = 'block';
-        });
       }
+    });
+    
+    // 重新应用懒加载逻辑，确保新添加的图片也能被观察
+    setupLazyLoading();
+
+    // 为所有显示答案按钮添加事件监听
+    document.querySelectorAll('.show-answer-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const card = this.closest('.word-card');
+        if (card) {
+          card.querySelector('.correct-answer').style.display = 'block';
+        }
+      });
     });
   }
 }
